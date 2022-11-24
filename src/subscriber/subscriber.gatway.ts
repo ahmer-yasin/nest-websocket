@@ -6,9 +6,8 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   MessageBody,
-  ConnectedSocket,
 } from '@nestjs/websockets';
-import { MessageDTO } from './dto/message.dto';
+import { MessageDTO, TypeEnum } from './dto/message.dto';
 
 @WebSocketGateway()
 export class SubscriberGateway
@@ -16,61 +15,71 @@ export class SubscriberGateway
 {
   @WebSocketServer() server;
   users = 0;
-  constructor() {
-    this.server.on('error', (error) => {
-      console.log(error);
-    });
-  }
   async handleConnection() {
     // A client has connected
     // Notify connected clients of current users
-    this.server.emit('users', this.users);
-    console.log(`users ${this.users}`);
+    // this.server.emit('users', this.users);
+    // console.log(`users ${this.users}`);
   }
   async handleDisconnect() {
     // A client has disconnected
     // Notify connected clients of current users
-    this.server.emit('users', this.users);
-    console.log(`users ${this.users}`);
+    // this.server.emit('users', this.users);
+    // console.log(`users ${this.users}`);
   }
 
-  @SubscribeMessage('Subscribe')
-  async onSubscribe(client, message: MessageDTO) {
-    await this.waitMessage(4);
-    this.users++;
-    client.broadcast.emit('Subscribe', {
-      type: 'Subscribe',
-      status: 'Subscribed',
-      updatedAt: new Date(),
-    });
-  }
+  @SubscribeMessage('event')
+  async onClickEvent(
+    client,
+    @MessageBody() message: MessageDTO,
+  ): Promise<void> {
+    switch (message.type) {
+      case TypeEnum.SUBSCRIBE:
+        await this.waitMessage(4);
+        this.users++;
+        this.server.emit(TypeEnum.SUBSCRIBE, {
+          type: TypeEnum.SUBSCRIBE,
+          status: 'subscribed',
+          count: this.users,
+          updatedAt: new Date(),
+        });
+        break;
+      case TypeEnum.UN_SUBSCRIBE:
+        await this.waitMessage(8);
+        this.users--;
+        this.server.emit(TypeEnum.UN_SUBSCRIBE, {
+          type: TypeEnum.UN_SUBSCRIBE,
+          status: 'unsubscribed',
+          count: this.users,
+          updatedAt: new Date(),
+        });
+        break;
+      case TypeEnum.COUNT_SUBSCRIBERS:
+        console.log(this.users);
+        this.server.emit(TypeEnum.COUNT_SUBSCRIBERS, {
+          type: TypeEnum.COUNT_SUBSCRIBERS,
+          count: this.users,
+          updatedAt: new Date(),
+        });
+        break;
+      case TypeEnum.HEART_BEAT:
+        console.log(this.users);
+        this.server.emit(TypeEnum.HEART_BEAT, {
+          type: TypeEnum.HEART_BEAT,
+          message: 'pong',
+          updatedAt: new Date(),
+        });
+        break;
 
-  @SubscribeMessage('Unsubscribe')
-  async onUnSubscribe(client, message: MessageDTO) {
-    await this.waitMessage(8);
-    this.users--;
-    client.broadcast.emit('Unsubscribe', {
-      type: 'Unscubscribe',
-      status: 'unsubscribed',
-      updatedAt: new Date(),
-    });
-  }
-
-  @SubscribeMessage('CountSubscribers')
-  async onCountSubscribers(client, message: MessageDTO) {
-    client.broadcast.emit('CountSubscribers', {
-      type: 'CountSubscribers',
-      count: this.users,
-      updatedAt: new Date(),
-    });
-  }
-
-  @SubscribeMessage('my-event')
-  onChgEvent(
-    @MessageBody() message: any,
-    @ConnectedSocket() socket: Socket,
-  ): void {
-    socket.broadcast.emit('my-event', message);
+      default:
+        this.server.emit(TypeEnum.ERROR, {
+          type: 'error',
+          error: 'Requested method not implemented',
+          updatedAt: new Date(),
+        });
+        break;
+    }
+    return;
   }
 
   waitMessage(time) {

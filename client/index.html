@@ -5,9 +5,20 @@
   <title>Quickstart Guide</title>
 </head>
 <body>
-  <div id="app"></div>
-  <button id="button">Click me!</button>
+  <div id="app">
+    <button onclick="clickMe('Subscribe')">Subscribe me!</button>
+  </div>
   
+  <button onclick="clickMe('Unsubscribe')">Un Subscribe me!</button>
+
+
+  <button onclick="clickMe('CountSubscribers')">Counter!</button>
+
+
+  <button onclick="clickMe('heart_beat')">Heat Beat</button>
+
+  <button onclick="clickMe('other')">Other Event</button>
+
 <!--   imports socket client library, you can also npm install socket.io-client and import it into your client js files -->
   <script src="/socket.io/socket.io.js"></script>
   <script src="client.js"></script>

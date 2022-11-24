@@ -1,21 +1,14 @@
 import { IsString, IsEnum, IsNotEmpty } from '@nestjs/class-validator';
 
-enum TypeEnum {
+export enum TypeEnum {
   SUBSCRIBE = 'Subscribe',
-  UN_SUBSCRIBE = 'Unscubscribe',
+  UN_SUBSCRIBE = 'Unsubscribe',
   COUNT_SUBSCRIBERS = 'CountSubscribers',
   HEART_BEAT = 'heart_beat',
+  ERROR = 'error',
 }
 
 export class MessageDTO {
   @IsString()
-  @IsNotEmpty()
-  status: string;
-
-  @IsString()
-  @IsEnum(TypeEnum)
-  type: TypeEnum;
-
-  @IsString()
-  updatedAt: Date;
+  type: string;
 }
